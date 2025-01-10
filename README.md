@@ -139,8 +139,8 @@ components = generator.extract_snowflake_info(snowflake_id)
 print(components)
 ```
 
-This will return a dictionary with the following keys:
-- `timestamp`: The time at which the ID was generated, formatted as a human-readable string.
+This will return a SnowflakeIDInfo with the following attributes:
+- `datetime`: The time at which the ID was generated, datetime class.
 - `node_id`: The ID of the node that generated the ID.
 - `worker_id`: The ID of the worker that generated the ID.
 - `sequence`: The sequence number within the same millisecond.

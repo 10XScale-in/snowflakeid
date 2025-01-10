@@ -3,7 +3,8 @@ from typing import Any
 
 import pytest
 
-from snowflakeid.snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakeid.generator import SnowflakeIDInfo
 
 # Define 64-bit configuration for testing
 TEST_CONFIG_64BIT = SnowflakeIDConfig(
@@ -118,12 +119,12 @@ async def test_extract_snowflake_info_32bit():
     """Test extracting information from a 32-bit Snowflake ID."""
     generator = SnowflakeIDGenerator(config=TEST_CONFIG_64BIT)
     snowflake_id = await generator.generate()
-    info = generator.extract_snowflake_info(snowflake_id)
+    info: SnowflakeIDInfo = generator.extract_snowflake_info(snowflake_id)
 
-    assert info["timestamp"] is not None, "Timestamp should be extracted."
-    assert info["worker_id"] == TEST_CONFIG_64BIT.worker_id, "Incorrect worker ID extracted."
-    assert info["node_id"] == TEST_CONFIG_64BIT.node_id, "Incorrect node ID extracted."
-    assert info["sequence"] >= 0, "Sequence should be a non-negative integer."
+    assert info.datetime is not None, "Timestamp should be extracted."
+    assert info.worker_id == TEST_CONFIG_64BIT.worker_id, "Incorrect worker ID extracted."
+    assert info.node_id == TEST_CONFIG_64BIT.node_id, "Incorrect node ID extracted."
+    assert info.sequence >= 0, "Sequence should be a non-negative integer."
 
 
 # # Intentionally create a collision scenario for testing purposes

@@ -1,18 +1,28 @@
 import asyncio
 import time
 from dataclasses import dataclass
+import datetime as dt
 from typing import Optional, Dict
 
 # Constants
-DEFAULT_EPOCH_MS = 1723323246031
+DEFAULT_EPOCH = 1735689600000
 BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 BASE62_BASE = len(BASE62_CHARS)
 
 
 @dataclass(frozen=True)
+class SnowflakeIDInfo:
+    datetime: dt.datetime
+    node_id: int
+    worker_id: int
+    sequence: int
+
+
+
+@dataclass(frozen=True)
 class SnowflakeIDConfig:
     """Configuration for the Snowflake ID generator."""
-    epoch: int = None
+    epoch: int = DEFAULT_EPOCH
     total_bits: int = 64
     time_bits: int = 39
     node_bits: int = 7
@@ -109,7 +119,7 @@ class SnowflakeIDGenerator:
             decoded += BASE62_CHARS.index(char) * (BASE62_BASE ** i)
         return decoded
 
-    def extract_snowflake_info(self, snowflake_id: int) -> Dict[str, int]:
+    def extract_snowflake_info(self, snowflake_id: int) -> SnowflakeIDInfo:
         """Extracts the components of a Snowflake ID.
 
         Returns:
@@ -135,11 +145,16 @@ class SnowflakeIDGenerator:
         sequence = snowflake_id & sequence_mask
 
         # parse timestamp to readable format
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp / 1000))
-
-        return {
-            "timestamp": timestamp,
-            "worker_id": worker_id,
-            "node_id": node_id,
-            "sequence": sequence,
-        }
+        # timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp / 1000))
+        return SnowflakeIDInfo(
+            datetime=dt.datetime.fromtimestamp(timestamp / 1000),
+            worker_id=worker_id,
+            node_id=node_id,
+            sequence=sequence
+        )
+        # return {
+        #     "timestamp": timestamp,
+        #     "worker_id": worker_id,
+        #     "node_id": node_id,
+        #     "sequence": sequence,
+        # }
