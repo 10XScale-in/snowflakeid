@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 # Constants
-DEFAULT_EPOCH_MS = 1723323246031  # Default epoch: 2024-08-12 20:54:06.031 UTC
+DEFAULT_EPOCH_MS = 1723323246031 + (24 * 60 * 60 * 1000)  # Default epoch: 2024-08-12 20:54:06.031 UTC + 24 hours
 BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 BASE62_BASE = len(BASE62_CHARS)
 

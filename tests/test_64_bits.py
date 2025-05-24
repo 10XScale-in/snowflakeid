@@ -183,11 +183,11 @@ def test_sync_extract_snowflake_info_64bit():
 
 # Removing the intentional collision test as it's not part of the new requirements for this file
 # and its principles are covered by uniqueness.
-# @pytest.mark.asyncio
-# async def test_intentional_collision_64bit():
-#     """Demonstrates an intentional collision (avoid in production!)."""
-#     generator1 = SnowflakeGenerator(config=TEST_CONFIG_64BIT) # Updated class name
-#     generator2 = SnowflakeGenerator(config=TEST_CONFIG_64BIT) # Updated class name
+@pytest.mark.asyncio
+async def test_intentional_collision_64bit():
+    """Demonstrates an intentional collision (avoid in production!)."""
+    generator1 = SnowflakeGenerator(config=TEST_CONFIG_64BIT) # Updated class name
+    generator2 = SnowflakeGenerator(config=TEST_CONFIG_64BIT) # Updated class name
     id1 = await generator1.generate()
 
     # Reset the state of the second generator to force a collision

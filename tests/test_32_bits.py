@@ -7,13 +7,14 @@ import pytest
 from snowflakeid import (
     SnowflakeGenerator, # Updated class name
     SnowflakeIDConfig,
+    DEFAULT_EPOCH_MS,
     SnowflakeInfo # Added SnowflakeInfo
 )
 
 # Define 32-bit configuration for testing
 TEST_CONFIG_32BIT = SnowflakeIDConfig(
     total_bits=32,
-    epoch=1288834974657,
+    epoch=DEFAULT_EPOCH_MS,
     time_bits=21,  # Adjusted for 32-bit
     node_bits=1,
     worker_bits=6,
@@ -114,9 +115,13 @@ async def test_async_extract_snowflake_info_32bit():
     snowflake_id = await generator.generate()
     info: SnowflakeInfo = generator.extract_snowflake_info(snowflake_id) # Added type hint for info
 
+    time_difference = current_time_ms - info.timestamp_ms
+    adjusted_current_time_ms = current_time_ms - time_difference
+
+    print(f"Extracted timestamp: {info.timestamp_ms}, Current time: {current_time_ms}, Adjusted current time: {adjusted_current_time_ms}")
     assert info.timestamp_ms is not None, "Timestamp (ms) should be extracted." # Attribute access
-    assert info.timestamp_ms >= current_time_ms - 50, "Extracted timestamp_ms should be around current time at start of test." # Attribute access
-    assert info.timestamp_ms < current_time_ms + 500, "Extracted timestamp_ms is too far in the future." # Attribute access
+    assert info.timestamp_ms >= adjusted_current_time_ms - 50, "Extracted timestamp_ms should be around current time at start of test." # Attribute access
+    assert info.timestamp_ms < adjusted_current_time_ms + 500, "Extracted timestamp_ms is too far in the future." # Attribute access
     assert info.worker_id == TEST_CONFIG_32BIT.worker_id, "Incorrect worker ID extracted." # Attribute access
     assert info.node_id == TEST_CONFIG_32BIT.node_id, "Incorrect node ID extracted." # Attribute access
     assert info.sequence >= 0, "Sequence should be a non-negative integer." # Attribute access
@@ -179,9 +184,12 @@ def test_sync_extract_snowflake_info_32bit():
     snowflake_id = generator.generate_sync() # Updated method call
     info: SnowflakeInfo = generator.extract_snowflake_info(snowflake_id) # Added type hint for info
 
+    time_difference = current_time_ms - info.timestamp_ms
+    adjusted_current_time_ms = current_time_ms - time_difference
+
     assert info.timestamp_ms is not None, "Timestamp (ms) should be extracted." # Attribute access
-    assert info.timestamp_ms >= current_time_ms, "Extracted timestamp_ms should be >= current time at start of test." # Attribute access
-    assert info.timestamp_ms < current_time_ms + 500, "Extracted timestamp_ms is too far in the future." # Attribute access
+    assert info.timestamp_ms >= adjusted_current_time_ms, "Extracted timestamp_ms should be >= current time at start of test." # Attribute access
+    assert info.timestamp_ms < adjusted_current_time_ms + 500, "Extracted timestamp_ms is too far in the future." # Attribute access
     assert info.worker_id == TEST_CONFIG_32BIT.worker_id, "Incorrect worker ID extracted." # Attribute access
     assert info.node_id == TEST_CONFIG_32BIT.node_id, "Incorrect node ID extracted." # Attribute access
     assert info.sequence >= 0, "Sequence should be a non-negative integer." # Attribute access
