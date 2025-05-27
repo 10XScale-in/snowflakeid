@@ -2,7 +2,7 @@ import asyncio
 import threading
 import time
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 # Constants
 DEFAULT_EPOCH_MS = 1723323246031  # Default epoch: 2024-08-12 20:54:06.031 UTC
@@ -29,6 +29,7 @@ class SnowflakeIDConfig:
         sequence_bits (Optional[int]): Number of bits for the sequence number.
                                        Calculated as `total_bits - time_bits - node_bits - worker_bits`.
     """
+
     epoch: Optional[int] = None
     total_bits: int = 64
     time_bits: int = 39
@@ -43,8 +44,10 @@ class SnowflakeIDConfig:
         Calculates sequence_bits and validates the configuration after initialization.
         """
         # Calculate sequence bits automatically based on other bit allocations.
-        calculated_sequence_bits = self.total_bits - self.time_bits - self.node_bits - self.worker_bits
-        object.__setattr__(self, 'sequence_bits', calculated_sequence_bits)
+        calculated_sequence_bits = (
+            self.total_bits - self.time_bits - self.node_bits - self.worker_bits
+        )
+        object.__setattr__(self, "sequence_bits", calculated_sequence_bits)
         # Validate configuration now that all fields, including sequence_bits, are set.
         self._validate_config()
 
@@ -87,18 +90,23 @@ class SnowflakeIDConfig:
         if self.total_bits != expected_total_bits:
             raise ValueError(
                 f"The sum of time_bits, node_bits, worker_bits, and sequence_bits ({expected_total_bits}) "
-                f"must equal total_bits ({self.total_bits})." # Ensure spacing for long lines
+                f"must equal total_bits ({self.total_bits})."  # Ensure spacing for long lines
             )
 
         # Validate epoch (if provided, otherwise DEFAULT_EPOCH_MS is used which is assumed valid)
-        current_epoch_to_check = self.epoch if self.epoch is not None else DEFAULT_EPOCH_MS
+        current_epoch_to_check = (
+            self.epoch if self.epoch is not None else DEFAULT_EPOCH_MS
+        )
         if not isinstance(current_epoch_to_check, int) or current_epoch_to_check <= 0:
-            raise ValueError("Epoch must be a positive integer representing milliseconds.")
+            raise ValueError(
+                "Epoch must be a positive integer representing milliseconds."
+            )
 
 
 @dataclass(frozen=True)
 class SnowflakeInfo:
     """Holds the extracted components of a Snowflake ID."""
+
     timestamp_ms: int  # Timestamp in milliseconds since the epoch
     readable_timestamp: str  # Human-readable timestamp string
     node_id: int
@@ -136,10 +144,10 @@ class SnowflakeGenerator:
         self.config = config or SnowflakeIDConfig()
         self.last_timestamp: int = -1
         self.sequence: int = 0
-        self.async_lock = asyncio.Lock() # Renamed lock to async_lock
+        self.async_lock = asyncio.Lock()  # Renamed lock to async_lock
         self.sync_lock = threading.Lock()  # Added sync_lock
 
-    async def generate(self) -> int: # This is the async generate
+    async def generate(self) -> int:  # This is the async generate
         """
         Generates a unique Snowflake ID asynchronously.
 
@@ -162,7 +170,9 @@ class SnowflakeGenerator:
 
             if timestamp == self.last_timestamp:
                 # Increment sequence if within the same millisecond
-                self.sequence = (self.sequence + 1) & ((1 << self.config.sequence_bits) - 1)
+                self.sequence = (self.sequence + 1) & (
+                    (1 << self.config.sequence_bits) - 1
+                )
                 if self.sequence == 0:
                     # Sequence overflow, wait for the next millisecond
                     timestamp = await self._wait_next_millis(self.last_timestamp)
@@ -173,7 +183,9 @@ class SnowflakeGenerator:
             self.last_timestamp = timestamp
 
             # Calculate time delta from epoch
-            current_epoch = self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+            current_epoch = (
+                self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+            )
             time_since_epoch = timestamp - current_epoch
             if time_since_epoch < 0:
                 raise ValueError(
@@ -186,7 +198,9 @@ class SnowflakeGenerator:
             # Compose the ID from parts
             # Shift timestamp to the left by the sum of node, worker, and sequence bits
             time_part = time_shift << (
-                self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
+                self.config.node_bits
+                + self.config.worker_bits
+                + self.config.sequence_bits
             )
             # Shift node ID to the left by the sum of worker and sequence bits
             node_part = self.config.node_id << (
@@ -239,7 +253,9 @@ class SnowflakeGenerator:
         if snowflake_id == 0:
             return BASE62_CHARS[0]
         if snowflake_id < 0:
-            raise ValueError("Snowflake ID must be a non-negative integer for Base62 encoding.")
+            raise ValueError(
+                "Snowflake ID must be a non-negative integer for Base62 encoding."
+            )
 
         encoded_chars = []
         while snowflake_id > 0:
@@ -276,7 +292,9 @@ class SnowflakeGenerator:
                 )
         return decoded_id
 
-    def extract_snowflake_info(self, snowflake_id: int) -> SnowflakeInfo: # Updated return type hint
+    def extract_snowflake_info(
+        self, snowflake_id: int
+    ) -> SnowflakeInfo:  # Updated return type hint
         """
         Extracts the components (timestamp, node ID, worker ID, sequence) from a Snowflake ID.
 
@@ -292,7 +310,7 @@ class SnowflakeGenerator:
                            - node_id (int): Extracted node ID.
                            - worker_id (int): Extracted worker ID.
                            - sequence (int): Extracted sequence number.
-        
+
         Raises:
             ValueError: If snowflake_id is not a non-negative integer.
         """
@@ -311,7 +329,9 @@ class SnowflakeGenerator:
         # Shifts required to isolate each part
         worker_shift = sequence_bits
         node_shift = sequence_bits + worker_bits
-        time_shift_extract = sequence_bits + worker_bits + node_bits # Renamed for clarity
+        time_shift_extract = (
+            sequence_bits + worker_bits + node_bits
+        )  # Renamed for clarity
 
         # Extract components using masks and bitwise right shifts
         sequence = snowflake_id & sequence_mask
@@ -320,13 +340,17 @@ class SnowflakeGenerator:
         timestamp_delta = (snowflake_id >> time_shift_extract) & ((1 << time_bits) - 1)
 
         # Reconstruct the full timestamp
-        current_epoch = self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+        current_epoch = (
+            self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+        )
         timestamp_ms = timestamp_delta + current_epoch
         # Format timestamp for readability
         # Using time.gmtime for UTC representation if desired, or localtime for local time.
         # The original used localtime. For consistency with epochs usually being UTC, gmtime might be better
         # but sticking to localtime to avoid breaking change in output format unless specified.
-        readable_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp_ms / 1000))
+        readable_timestamp = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(timestamp_ms / 1000)
+        )
         # Optional: Add milliseconds part to the readable string for more precision
         # ms_part = int(timestamp_ms % 1000)
         # readable_timestamp += f".{ms_part:03d}"
@@ -336,7 +360,7 @@ class SnowflakeGenerator:
             readable_timestamp=readable_timestamp,
             node_id=node_id,
             worker_id=worker_id,
-            sequence=sequence
+            sequence=sequence,
         )
 
     # --- Synchronous methods ---
@@ -367,7 +391,7 @@ class SnowflakeGenerator:
             RuntimeError: If the clock moves backwards.
             ValueError: If the timestamp is before the configured epoch.
         """
-        with self.sync_lock: # Use sync_lock
+        with self.sync_lock:  # Use sync_lock
             timestamp = self._get_timestamp()
 
             # Check for clock skew
@@ -379,7 +403,9 @@ class SnowflakeGenerator:
 
             if timestamp == self.last_timestamp:
                 # Increment sequence if within the same millisecond
-                self.sequence = (self.sequence + 1) & ((1 << self.config.sequence_bits) - 1)
+                self.sequence = (self.sequence + 1) & (
+                    (1 << self.config.sequence_bits) - 1
+                )
                 if self.sequence == 0:
                     # Sequence overflow, wait for the next millisecond
                     timestamp = self._wait_next_millis_sync(self.last_timestamp)
@@ -390,7 +416,9 @@ class SnowflakeGenerator:
             self.last_timestamp = timestamp
 
             # Calculate time delta from epoch
-            current_epoch = self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+            current_epoch = (
+                self.config.epoch if self.config.epoch is not None else DEFAULT_EPOCH_MS
+            )
             time_since_epoch = timestamp - current_epoch
             if time_since_epoch < 0:
                 raise ValueError(
@@ -402,7 +430,9 @@ class SnowflakeGenerator:
 
             # Compose the ID from parts
             time_part = time_shift << (
-                self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
+                self.config.node_bits
+                + self.config.worker_bits
+                + self.config.sequence_bits
             )
             node_part = self.config.node_id << (
                 self.config.worker_bits + self.config.sequence_bits

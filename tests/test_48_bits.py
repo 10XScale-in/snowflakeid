@@ -7,7 +7,6 @@ import pytest
 from snowflakeid import (
     SnowflakeGenerator, # Updated class name
     SnowflakeIDConfig,
-    DEFAULT_EPOCH_MS,
     SnowflakeInfo # Added SnowflakeInfo
 )
 
