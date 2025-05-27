@@ -12,6 +12,7 @@ BASE62_BASE = len(BASE62_CHARS)
 @dataclass(frozen=True)
 class SnowflakeIDConfig:
     """Configuration for the Snowflake ID generator."""
+
     epoch: int = None
     total_bits: int = 64
     time_bits: int = 39
@@ -23,7 +24,11 @@ class SnowflakeIDConfig:
 
     def __post_init__(self):
         # Calculate sequence bits automatically
-        object.__setattr__(self, 'sequence_bits', self.total_bits - self.time_bits - self.node_bits - self.worker_bits)
+        object.__setattr__(
+            self,
+            "sequence_bits",
+            self.total_bits - self.time_bits - self.node_bits - self.worker_bits,
+        )
         # Validate configuration now that all fields are set
         self._validate_config()
 
@@ -32,16 +37,24 @@ class SnowflakeIDConfig:
         # check node id is within bounds based on the number of bits
         max_node_id = (1 << self.node_bits) - 1
         if self.node_id > max_node_id:
-            raise ValueError(f"Node ID ({self.node_id}) must be less than or equal to {max_node_id}")
+            raise ValueError(
+                f"Node ID ({self.node_id}) must be less than or equal to {max_node_id}"
+            )
 
         # check worker id is within bounds based on the number of bits
         max_worker_id = (1 << self.worker_bits) - 1
         if self.worker_id > max_worker_id:
-            raise ValueError(f"Worker ID ({self.worker_id}) must be less than or equal to {max_worker_id}")
+            raise ValueError(
+                f"Worker ID ({self.worker_id}) must be less than or equal to {max_worker_id}"
+            )
 
         # validate total bits
-        if self.total_bits <= sum([self.time_bits, self.node_bits, self.worker_bits, 1]):
-            raise ValueError("The sum of time bits, node bits, worker bits must equal total bits")
+        if self.total_bits <= sum(
+            [self.time_bits, self.node_bits, self.worker_bits, 1]
+        ):
+            raise ValueError(
+                "The sum of time bits, node bits, worker bits must equal total bits"
+            )
 
 
 class SnowflakeIDGenerator:
@@ -60,7 +73,9 @@ class SnowflakeIDGenerator:
             if timestamp < self.last_timestamp:
                 raise RuntimeError("Clock moved backwards! Refusing to generate IDs.")
             if timestamp == self.last_timestamp:
-                self.sequence = (self.sequence + 1) & ((1 << self.config.sequence_bits) - 1)
+                self.sequence = (self.sequence + 1) & (
+                    (1 << self.config.sequence_bits) - 1
+                )
                 if self.sequence == 0:
                     timestamp = await self._wait_next_millis(self.last_timestamp)
             else:
@@ -71,8 +86,14 @@ class SnowflakeIDGenerator:
             time_shift = time_since_epoch & ((1 << self.config.time_bits) - 1)
 
             # Calculate the final Snowflake ID
-            time_part = time_shift << (self.config.node_bits + self.config.worker_bits + self.config.sequence_bits)
-            node_part = self.config.node_id << (self.config.worker_bits + self.config.sequence_bits)
+            time_part = time_shift << (
+                self.config.node_bits
+                + self.config.worker_bits
+                + self.config.sequence_bits
+            )
+            node_part = self.config.node_id << (
+                self.config.worker_bits + self.config.sequence_bits
+            )
             worker_part = self.config.worker_id << self.config.sequence_bits
             sequence_part = self.sequence
             final_bits = time_part | node_part | worker_part | sequence_part
@@ -106,7 +127,7 @@ class SnowflakeIDGenerator:
         """Decodes a Base62 string to a Snowflake ID."""
         decoded = 0
         for i, char in enumerate(reversed(encoded_id)):
-            decoded += BASE62_CHARS.index(char) * (BASE62_BASE ** i)
+            decoded += BASE62_CHARS.index(char) * (BASE62_BASE**i)
         return decoded
 
     def extract_snowflake_info(self, snowflake_id: int) -> Dict[str, int]:
@@ -118,24 +139,28 @@ class SnowflakeIDGenerator:
 
         sequence_mask = (1 << self.config.sequence_bits) - 1
         worker_mask = ((1 << self.config.worker_bits) - 1) << self.config.sequence_bits
-        node_mask = ((1 << self.config.node_bits) - 1) << (self.config.worker_bits + self.config.sequence_bits)
+        node_mask = ((1 << self.config.node_bits) - 1) << (
+            self.config.worker_bits + self.config.sequence_bits
+        )
         time_mask = ((1 << self.config.time_bits) - 1) << (
-                self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
+            self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
         )
 
-        timestamp = ((snowflake_id & time_mask) >> (
-                self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
-        ))
+        timestamp = (snowflake_id & time_mask) >> (
+            self.config.node_bits + self.config.worker_bits + self.config.sequence_bits
+        )
 
         # **CORRECTED LINE:** Add epoch BEFORE shifting
         timestamp += self.config.epoch
 
-        node_id = (snowflake_id & node_mask) >> (self.config.worker_bits + self.config.sequence_bits)
+        node_id = (snowflake_id & node_mask) >> (
+            self.config.worker_bits + self.config.sequence_bits
+        )
         worker_id = (snowflake_id & worker_mask) >> self.config.sequence_bits
         sequence = snowflake_id & sequence_mask
 
         # parse timestamp to readable format
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp / 1000))
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp / 1000))
 
         return {
             "timestamp": timestamp,

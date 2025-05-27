@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from snowflakeid.snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
 
 # Define 32-bit configuration for testing
 TEST_CONFIG_32BIT = SnowflakeIDConfig(
@@ -13,7 +13,7 @@ TEST_CONFIG_32BIT = SnowflakeIDConfig(
     node_bits=1,
     worker_bits=6,
     node_id=1,  # Setting specific node ID for testing
-    worker_id=5  # Setting specific worker ID for testing
+    worker_id=5,  # Setting specific worker ID for testing
 )
 
 TEST_CONFIG_32BIT2 = SnowflakeIDConfig(
@@ -23,12 +23,14 @@ TEST_CONFIG_32BIT2 = SnowflakeIDConfig(
     node_bits=1,
     worker_bits=6,
     node_id=0,  # Setting specific node ID for testing
-    worker_id=5  # Setting specific worker ID for testing
+    worker_id=5,  # Setting specific worker ID for testing
 )
 
 
 # Helper Functions for Testing
-async def generate_ids_concurrently(generator: SnowflakeIDGenerator, count: int) -> tuple[Any]:
+async def generate_ids_concurrently(
+    generator: SnowflakeIDGenerator, count: int
+) -> tuple[Any]:
     """Generates multiple Snowflake IDs concurrently using asyncio.gather."""
     tasks = [generator.generate() for _ in range(count)]
     return await asyncio.gather(*tasks)
@@ -121,7 +123,9 @@ async def test_extract_snowflake_info_32bit():
     print(info)
 
     assert info["timestamp"] is not None, "Timestamp should be extracted."
-    assert info["worker_id"] == TEST_CONFIG_32BIT.worker_id, "Incorrect worker ID extracted."
+    assert info["worker_id"] == TEST_CONFIG_32BIT.worker_id, (
+        "Incorrect worker ID extracted."
+    )
     assert info["node_id"] == TEST_CONFIG_32BIT.node_id, "Incorrect node ID extracted."
     assert info["sequence"] >= 0, "Sequence should be a non-negative integer."
 

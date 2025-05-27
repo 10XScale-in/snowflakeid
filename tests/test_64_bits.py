@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from snowflakeid.snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
 
 # Define 64-bit configuration for testing
 TEST_CONFIG_64BIT = SnowflakeIDConfig(
@@ -13,7 +13,7 @@ TEST_CONFIG_64BIT = SnowflakeIDConfig(
     node_bits=1,
     worker_bits=11,
     node_id=1,
-    worker_id=7
+    worker_id=7,
 )
 
 TEST_CONFIG_64BIT2 = SnowflakeIDConfig(
@@ -23,13 +23,16 @@ TEST_CONFIG_64BIT2 = SnowflakeIDConfig(
     node_bits=1,
     worker_bits=11,
     node_id=0,
-    worker_id=7
+    worker_id=7,
 )
 
 
 # Helper Functions for Testing
 
-async def generate_ids_concurrently(generator: SnowflakeIDGenerator, count: int) -> tuple[Any]:
+
+async def generate_ids_concurrently(
+    generator: SnowflakeIDGenerator, count: int
+) -> tuple[Any]:
     """Generates multiple Snowflake IDs concurrently using asyncio.gather."""
     tasks = [generator.generate() for _ in range(count)]
     return await asyncio.gather(*tasks)
@@ -121,7 +124,9 @@ async def test_extract_snowflake_info_32bit():
     info = generator.extract_snowflake_info(snowflake_id)
 
     assert info["timestamp"] is not None, "Timestamp should be extracted."
-    assert info["worker_id"] == TEST_CONFIG_64BIT.worker_id, "Incorrect worker ID extracted."
+    assert info["worker_id"] == TEST_CONFIG_64BIT.worker_id, (
+        "Incorrect worker ID extracted."
+    )
     assert info["node_id"] == TEST_CONFIG_64BIT.node_id, "Incorrect node ID extracted."
     assert info["sequence"] >= 0, "Sequence should be a non-negative integer."
 
