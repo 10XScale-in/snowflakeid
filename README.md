@@ -14,12 +14,7 @@ A Python library for generating unique, distributed IDs using a modified Snowfla
 You can install the library using pip after building the package:
 
 ```bash
-pip install git+https://github.com/10XScale-in/snowflakeid.git
-```
-
-or
-```bash
-pip install https://github.com/10XScale-in/snowflakeid/releases/download/v0.1.0/snowflakeid-0.1.0-py3-none-any.whl
+pip install snowflakekit
 ```
 
 ## Usage
@@ -30,19 +25,19 @@ Here's a quick example of how to use the Snowflake ID generator:
 
 ```python
 import asyncio
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
 
 async def main():
-    generator = SnowflakeIDGenerator()
+    generator = SnowflakeGenerator()
     snowflake_id = await generator.generate()
     print(f"Generated Snowflake ID: {snowflake_id}")
 
     # Base62 encoding
-    encoded_id = SnowflakeIDGenerator.encode_base62(snowflake_id)
+    encoded_id = SnowflakeGenerator.encode_base62(snowflake_id)
     print(f"Base62 Encoded ID: {encoded_id}")
 
     # Decoding back to Snowflake ID
-    decoded_id = SnowflakeIDGenerator.decode_base62(encoded_id)
+    decoded_id = SnowflakeGenerator.decode_base62(encoded_id)
     print(f"Decoded Snowflake ID: {decoded_id}")
 
     # Extracting components from Snowflake ID
@@ -54,14 +49,14 @@ asyncio.run(main())
 
 ### Configuration
 
-You can customize the ID generation by passing a `SnowflakeIDConfig` object to the `SnowflakeIDGenerator`. All configuration parameters are adjustable, allowing you to tailor the generator to your specific needs.
+You can customize the ID generation by passing a `SnowflakeConfig` object to the `SnowflakeGenerator`. All configuration parameters are adjustable, allowing you to tailor the generator to your specific needs.
 
 #### Custom Configuration Example (64-bit ID)
 
 ```python
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
 
-config = SnowflakeIDConfig(
+config = SnowflakeConfig(
     epoch=1609459200000,  # Custom epoch (January 1, 2021)
     node_id=1,
     worker_id=2,
@@ -69,7 +64,7 @@ config = SnowflakeIDConfig(
     node_bits=5,    # 5 bits for node ID (up to 32 nodes)
     worker_bits=8   # 8 bits for worker ID (up to 256 workers)
 )
-generator = SnowflakeIDGenerator(config=config)
+generator = SnowflakeGenerator(config=config)
 ```
 
 ### Custom Configuration Examples for Different Bit Allocations
@@ -82,9 +77,9 @@ generator = SnowflakeIDGenerator(config=config)
 - **Sequence Bits (12 bits):** Automatically calculated to allow up to 4096 IDs to be generated per worker, per millisecond.
 
 ```python
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
 
-config = SnowflakeIDConfig(
+config = SnowflakeConfig(
     epoch=1609459200000,
     node_id=1,
     worker_id=2,
@@ -92,7 +87,7 @@ config = SnowflakeIDConfig(
     node_bits=5,
     worker_bits=8
 )
-generator = SnowflakeIDGenerator(config=config)
+generator = SnowflakeGenerator(config=config)
 ```
 
 #### Example 2: 32-bit ID
@@ -103,9 +98,9 @@ generator = SnowflakeIDGenerator(config=config)
 - **Sequence Bits (4 bits):** Automatically calculated to allow up to 16 IDs to be generated per worker, per millisecond.
 
 ```python
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
-
-config = SnowflakeIDConfig(
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
+    
+config = SnowflakeConfig(
     epoch=1609459200000,
     node_id=1,
     worker_id=2,
@@ -114,7 +109,7 @@ config = SnowflakeIDConfig(
     worker_bits=6,
     total_bits=32  # Adjust total bits to 32 for a 32-bit ID
 )
-generator = SnowflakeIDGenerator(config=config)
+generator = SnowflakeGenerator(config=config)
 ```
 
 ### Default Bit Allocation
@@ -132,8 +127,8 @@ By default, the Snowflake ID is a 64-bit integer with the following bit allocati
 You can extract individual components (timestamp, node ID, worker ID, and sequence) from a Snowflake ID:
 
 ```python
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
-generator = SnowflakeIDGenerator()
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
+generator = SnowflakeGenerator()
 snowflake_id = await generator.generate()
 components = generator.extract_snowflake_info(snowflake_id)
 print(components)

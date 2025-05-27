@@ -10,7 +10,7 @@ BASE62_BASE = len(BASE62_CHARS)
 
 
 @dataclass(frozen=True)
-class SnowflakeIDConfig:
+class SnowflakeConfig:
     """Configuration for the Snowflake ID generator."""
 
     epoch: int = None
@@ -57,11 +57,11 @@ class SnowflakeIDConfig:
             )
 
 
-class SnowflakeIDGenerator:
+class SnowflakeGenerator:
     """Asynchronous Snowflake ID generator."""
 
-    def __init__(self, config: Optional[SnowflakeIDConfig] = None):
-        self.config = config or SnowflakeIDConfig()
+    def __init__(self, config: Optional[SnowflakeConfig] = None):
+        self.config = config or SnowflakeConfig()
         self.last_timestamp = -1
         self.sequence = 0
         self.lock = asyncio.Lock()

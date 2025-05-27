@@ -1,3 +1,28 @@
+[project]
+name = "snowflakekit"
+version = "0.1.1"
+description = "A fast, async Snowflake ID generator for Python."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Shudipto Trafder", email = "shudipto.trafder@hire10x.ai"}
+]
+keywords = ["snowflake", "id", "generator", "unique", "async", "base62"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/10XScale-in/snowflakeid"
+Repository = "https://github.com/10XScale-in/snowflakeid"
+Issues = "https://github.com/10XScale-in/snowflakeid/issues"
+
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

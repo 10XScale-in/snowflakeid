@@ -3,10 +3,10 @@ from typing import Any
 
 import pytest
 
-from snowflakeid import SnowflakeIDGenerator, SnowflakeIDConfig
+from snowflakekit import SnowflakeGenerator, SnowflakeConfig
 
 # Define 32-bit configuration for testing
-TEST_CONFIG_32BIT = SnowflakeIDConfig(
+TEST_CONFIG_32BIT = SnowflakeConfig(
     total_bits=32,
     epoch=1288834974657,
     time_bits=21,  # Adjusted for 32-bit
@@ -16,7 +16,7 @@ TEST_CONFIG_32BIT = SnowflakeIDConfig(
     worker_id=5,  # Setting specific worker ID for testing
 )
 
-TEST_CONFIG_32BIT2 = SnowflakeIDConfig(
+TEST_CONFIG_32BIT2 = SnowflakeConfig(
     total_bits=32,
     epoch=1288834974657,
     time_bits=21,  # Adjusted for 32-bit
@@ -29,7 +29,7 @@ TEST_CONFIG_32BIT2 = SnowflakeIDConfig(
 
 # Helper Functions for Testing
 async def generate_ids_concurrently(
-    generator: SnowflakeIDGenerator, count: int
+    generator: SnowflakeGenerator, count: int
 ) -> tuple[Any]:
     """Generates multiple Snowflake IDs concurrently using asyncio.gather."""
     tasks = [generator.generate() for _ in range(count)]
@@ -39,7 +39,7 @@ async def generate_ids_concurrently(
 @pytest.mark.asyncio
 async def test_snowflake_id_generation_32bit():
     """Test the generation of 32-bit Snowflake IDs."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     snowflake_id = await generator.generate()
     print(snowflake_id.bit_length())
 
@@ -51,7 +51,7 @@ async def test_snowflake_id_generation_32bit():
 @pytest.mark.asyncio
 async def test_async_snowflake_generation_32bit():
     """Test asynchronous generation of Snowflake IDs."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     ids = await generate_ids_concurrently(generator, 10)
     assert len(ids) == 10
     assert len(set(ids)) == 10, "Generated IDs should be unique."
@@ -60,7 +60,7 @@ async def test_async_snowflake_generation_32bit():
 @pytest.mark.asyncio
 async def test_snowflake_id_collision_32bit():
     """Test for potential ID collisions in a short time frame."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     ids = await generate_ids_concurrently(generator, 1000)
     print(len(ids), len(set(ids)))
     assert len(set(ids)) == 1000, "Collisions detected! IDs are not unique."
@@ -69,7 +69,7 @@ async def test_snowflake_id_collision_32bit():
 @pytest.mark.asyncio
 async def test_snowflake_id_collision_32bit2():
     """Test for potential ID collisions in a short time frame."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     ids = await generate_ids_concurrently(generator, 10_000)
     assert len(set(ids)) == 10_000, "Collisions detected! IDs are not unique."
 
@@ -77,7 +77,7 @@ async def test_snowflake_id_collision_32bit2():
 @pytest.mark.asyncio
 async def test_snowflake_id_collision_32bit3():
     """Test for potential ID collisions in a short time frame."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     for _ in range(10):
         ids = await generate_ids_concurrently(generator, 10_000)
         assert len(set(ids)) == 10_000, "Collisions detected! IDs are not unique."
@@ -86,19 +86,19 @@ async def test_snowflake_id_collision_32bit3():
 @pytest.mark.asyncio
 async def test_snowflake_id_collision_32bit3():
     """Test for potential ID collisions in a short time frame."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     for _ in range(100):
         _id = await generator.generate()
-        eid = SnowflakeIDGenerator.encode_base62(_id)
-        decoded_id = SnowflakeIDGenerator.decode_base62(eid)
+        eid = SnowflakeGenerator.encode_base62(_id)
+        decoded_id = SnowflakeGenerator.decode_base62(eid)
         assert _id == decoded_id, "Decoded ID should match the original ID."
 
 
 @pytest.mark.asyncio
 async def test_snowflake_id_two_generator_32bit():
     """Test for potential ID collisions in a short time frame."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
-    generator2 = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT2)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
+    generator2 = SnowflakeGenerator(config=TEST_CONFIG_32BIT2)
     id1 = await generator.generate()
     id2 = await generator2.generate()
     assert id1 != id2, "IDs should be different for two different generators."
@@ -107,7 +107,7 @@ async def test_snowflake_id_two_generator_32bit():
 @pytest.mark.asyncio
 async def test_snowflake_sequence_reset_32bit():
     """Test if the sequence resets at the next millisecond."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     id1 = await generator.generate()
     await asyncio.sleep(0.001)  # Sleep for 1 ms
     id2 = await generator.generate()
@@ -117,7 +117,7 @@ async def test_snowflake_sequence_reset_32bit():
 @pytest.mark.asyncio
 async def test_extract_snowflake_info_32bit():
     """Test extracting information from a 32-bit Snowflake ID."""
-    generator = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     snowflake_id = await generator.generate()
     info = generator.extract_snowflake_info(snowflake_id)
     print(info)
@@ -135,8 +135,8 @@ async def test_extract_snowflake_info_32bit():
 @pytest.mark.asyncio
 async def test_intentional_collision_32bit():
     """Demonstrates an intentional collision (avoid in production!)."""
-    generator1 = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
-    generator2 = SnowflakeIDGenerator(config=TEST_CONFIG_32BIT)
+    generator1 = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
+    generator2 = SnowflakeGenerator(config=TEST_CONFIG_32BIT)
     id1 = await generator1.generate()
 
     # Reset the state of the second generator to force a collision
